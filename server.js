@@ -5,52 +5,41 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// URL base de la API oficial de Roblox
-const ROBLOX_USER_API = "https://users.roblox.com/v1";
-
 app.get("/", (req, res) => {
-    res.send("Roblox Proxy is running");
+    res.send("Working Roblox Proxy");
 });
 
-// Obtener TODA la información de /v1/users/{userId}
 app.get("/user/:id", async (req, res) => {
-    const userId = req.params.id;
+    const UserId = parseInt(req.params.id);
 
     try {
-        const response = await fetch(`${ROBLOX_USER_API}/users/${userId}`);
+        const General = await fetch(`https://users.roblox.com/v1/users/${UserId}`);
+        if (!General.ok) {
+            return res.status(General.status).json({ error: "Roblox API Error" });
+        }
+        const Data1 = await General.json();
 
-        if (!response.ok) {
-            return res.status(response.status).json({ 
-                error: "Error getting user data" 
-            });
+        const RobloxBadges = await fetch(`https://accountinformation.roblox.com/v1/users/${UserId}/roblox-badges`);
+        const hasAdminBadge = false;
+        if (!RobloxBadges.ok) {
+            return res.status(General.status).json({ error: "Roblox API Error" });
+        } else {
+            hasAdminBadge = RobloxBadges.json().some(badge => badge.id === 1);
         }
 
-        const data = await response.json();
-        res.json(data);
+        const result = {
+            isBanned: Data1.isBanned,
+            created: Data1.created,
+            isAdmin: hasAdminBadge
+        };
+
+        res.json(result);
 
     } catch (error) {
-        res.status(500).json({ error: "Server error", details: error.message });
+        res.status(500).json({ error: "Server error" });
     }
 });
 
-// Obtener avatar (opcional)
-app.get("/avatar/:id", async (req, res) => {
-    const userId = req.params.id;
-
-    try {
-        const response = await fetch(
-            `https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-        );
-
-        const data = await response.json();
-        res.json(data);
-
-    } catch (error) {
-        res.status(500).json({ error: "Server error", details: error.message });
-    }
-});
-
-// Render usará este puerto automáticamente
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Proxy running on port ${PORT}`);
