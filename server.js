@@ -24,21 +24,20 @@ app.get("/user/:id", async (req, res) => {
             return res.status(RobloxBadges.status).json({ error: "Roblox API Error" });
         }
 
-        // ✅ let en lugar de const, y await antes de .json()
         const badgesData = await RobloxBadges.json();
         const hasAdminBadge = badgesData.some(badge => badge.id === 1);
 
         const result = {
-            isBanned: Data1.isBanned,
-            created: Data1.created,
-            isAdmin: hasAdminBadge
+            Banned: Data1.isBanned,
+            Created: Data1.created,
+            Admin: hasAdminBadge
         };
 
         res.json(result);
 
     } catch (error) {
-        console.error(error); // útil para ver el error real en los logs de Render
-        res.status(500).json({ error: "Server error" });
+        console.error(error);
+        res.status(500).json({ Error: "Server error" });
     }
 });
 
